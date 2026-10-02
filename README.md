@@ -131,7 +131,27 @@ DNS Response (Frame 20): Returned by the OPNsense firewall (10.10.10.1) back to 
 
 Evidence to submit
 
+## E7: Default Gateway Explanation
 
+The client virtual machine `icdfa-nslab-client-v1` uses `10.10.10.1` as its default gateway because it resides on an isolated internal network (`ICDFA-LAN`) without direct external network connectivity. To communicate with endpoints outside its local `10.10.10.0/24` subnet—such as internet destinations—traffic must be directed to a layer 3 routing device that bridges the internal network to upstream interfaces. The OPNsense firewall's LAN interface is configured with static IP `10.10.10.1`, serving as the default gateway that receives out-of-subnet packets from local hosts, applies Network Address Translation (NAT), and routes traffic through its WAN interface to external destinations.
+
+
+29. What is the difference between the OPNsense WAN and LAN interfaces?
+The WAN (Wide Area Network) interface connects OPNsense to the untrusted external network or VirtualBox NAT gateway to reach the internet, using DHCP to obtain an upstream IP address. The LAN (Local Area Network) interface connects to the isolated private virtual network (10.10.10.1/24), providing local services such as DHCP leasing and acting as the default gateway for internal client VMs.
+
+
+30. Why must both internal adapters use the same VirtualBox network name?
+VirtualBox isolates internal networks based on their exact string name. Both the OPNsense internal adapter and the Ubuntu client adapter must share the exact same network name (ICDFA-LAN) so VirtualBox places them on the same virtual Layer 2 software switch, allowing them to broadcast frames and communicate with each other.
+
+
+31. What information does the default route provide to Ubuntu?
+The default route provides Ubuntu with the IP address of its local gateway (10.10.10.1) and the interface to use (enp0s3) for forwarding any IP traffic whose destination subnet is outside the local 10.10.10.0/24 network.
+
+32. Which packet exchange allows Ubuntu to learn the firewall MAC address?
+The Address Resolution Protocol (ARP) exchange. Specifically, Ubuntu broadcasts an ARP Request querying "Who has 10.10.10.1?", and OPNsense replies via unicast with an ARP Reply containing its hardware MAC address (08:00:27:41:b0:10).
+
+33. Why does a successful ping to 1.1.1.1 not automatically prove that DNS is working?
+Pinging 1.1.1.1 tests connectivity directly using a numerical IP address, which evaluates Layer 3 routing and outbound NAT rules without requiring hostname resolution. Domain Name System (DNS) operates on a separate protocol (UDP/TCP port 53) to translate domain names (like opnsense.org) into IP addresses; therefore traffic can successfully route to an IP address even if DNS servers or resolution services are down.
 
 
    
